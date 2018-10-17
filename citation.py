@@ -22,20 +22,20 @@ parser.add_argument('--title', '-t', default="M.O.A. Citation",
                    help='title of the citation (default "M.O.A. CITATION")')
 parser.add_argument('--stamp', '-s', default="moa.png",
                    help='name of stamp .png file (default: moa)')
-parser.add_argument('--altfont', action="store_true",
+parser.add_argument('--altfont', '-a' action="store_true",
                    help='use alternative (old) font for the title')
-parser.add_argument('--condensed', action="store_true",
+parser.add_argument('--condensed', '-o' action="store_true",
                    help='use smaller spacing for lines')
-parser.add_argument('--barcode', default="1,1,1,2,2",
+parser.add_argument('--barcode', '-r' default="1,1,1,2,2",
                    help='barcode format to use in widths of lines as comma separated list')
 parser.add_argument('--theme', '-c', default = "default",
                    help='color scheme - can be overriden by individual color settings',
                    choices = [x for x in dir(colors) if x[0:2] != '__'])
-parser.add_argument('--foreground', '--fg', default = None,
+parser.add_argument('--foreground', '--fg', '-f', default = None,
                    help='hex color to use for foreground text and elements')
-parser.add_argument('--background', '--bg', default = None,
+parser.add_argument('--background', '--bg', '-b', default = None,
                    help='hex color to use for background')
-parser.add_argument('--details', '--det', default = None,
+parser.add_argument('--details', '--det', '-d', default = None,
                    help='hex color to use for background details')
 
 args = parser.parse_args()
