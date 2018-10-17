@@ -8,7 +8,7 @@ import colors
 m = 2
 w, h = 183, 80
 stamp_name = "moa.png"
-main_font = "BMminiA8_fix.ttf"
+main_font = "BMmini.ttf"
 use_alt_font = False
 
 
