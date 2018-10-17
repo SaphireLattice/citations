@@ -9,6 +9,7 @@ m = 2
 w, h = 183, 80
 stamp_name = "moa.png"
 main_font = "BMmini.ttf"
+altfont = "Megan_Serif.ttf"
 use_alt_font = False
 
 
@@ -22,11 +23,11 @@ parser.add_argument('--title', '-t', default="M.O.A. Citation",
                    help='title of the citation (default "M.O.A. CITATION")')
 parser.add_argument('--stamp', '-s', default="moa.png",
                    help='name of stamp .png file (default: moa)')
-parser.add_argument('--altfont', '-a' action="store_true",
+parser.add_argument('--altfont', '-a', action="store_true",
                    help='use alternative (old) font for the title')
-parser.add_argument('--condensed', '-o' action="store_true",
+parser.add_argument('--condensed', '-o', action="store_true",
                    help='use smaller spacing for lines')
-parser.add_argument('--barcode', '-r' default="1,1,1,2,2",
+parser.add_argument('--barcode', '-r', default="1,1,1,2,2",
                    help='barcode format to use in widths of lines as comma separated list')
 parser.add_argument('--theme', '-c', default = "default",
                    help='color scheme - can be overriden by individual color settings',
@@ -54,6 +55,7 @@ if condensed:
     minlines = 4
     lineheight = 9
 
+#TODO - Parameterise margin
 def line_bind(text):
     max_w = (w - 11 - 12) * m
     size = bm.getsize(text)
@@ -89,7 +91,7 @@ im = Image.new("RGB",(w*m, h*m), c_bg)
 draw = ImageDraw.Draw(im)
 if use_alt_font == True:
     global tbm
-    tbm = ImageFont.truetype("Megan_Serif.ttf", 16)
+    tbm = ImageFont.truetype(altfont, 16)
 
 def dots(line, offset, color = c_elem):
     start = offset[0]
