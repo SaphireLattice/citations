@@ -1,0 +1,82 @@
+@font-face {
+    font-family: BMmini;
+    src: url(BMminiA8.woff);
+}
+
+@font-face {
+    font-family: "Megan Serif";
+    src: url(Megan_Serif.woff);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 4em 1em;
+    background: #242427;
+    color: #ddd;
+    font-family: "Helvetica", sans-serif;
+}
+
+#column {
+    background: #f4f4f7;
+    color: #444;
+    max-width: 1000px;
+    margin: auto;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    padding: 2em;
+}
+h1 {
+    margin: auto;
+    text-align: center;
+}
+hr {
+    margin: 1em 0;
+}
+
+#main_canvas {
+    align-self:flex-start;
+    background: #f3d7e6;
+    min-width: 366px;
+    min-height: 160px;
+    margin-right: 3em;
+}
+#content {
+    display: flex;
+    flex-direction: row;
+}
+#controls {
+    flex: 1 auto;
+}
+textarea, input[type="text"] {
+    resize: vertical;
+    width: 100%;
+    margin: 0.5em 0;
+    padding: 0.25em 1em;
+    border: none;
+    border-left: 2px solid #242427;
+}
+label {
+    display: block;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 0.5em;
+}
+form {
+    text-align: center;
+}
+.subscript {
+    font-size: 0.75em;
+}
+
+@media only screen and (max-width: 799px) {
+    #content {
+        flex-direction: column;
+    }
+    #main_canvas {
+        margin: 0 auto 3em;
+    }
+}

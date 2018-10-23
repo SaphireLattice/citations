@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "target": "es5",
+    "sourceMap": true,
+    "baseUrl": "src/",
+    "outFile": "main.js"
+  },
+  "files" : [
+    "citation.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

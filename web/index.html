@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>[saphi.re:/papers_please/]</title>
+    <meta name="author" content="Saphire Lattice">
+    <meta name="description" content="Papers Please citation generator.">
+    <meta name="keywords" content="papers please,generator,citations,text">
+
+
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:creator" content="@SaphireLattice">
+    <meta name="twitter:site" content="@SaphireLattice">
+    <meta name="twitter:title" content="[saphi.re:/papers_please/]"/>
+    <meta name="twitter:description" content="Papers Please citation generator."/>
+
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="[saphi.re:/papers_please/]"/>
+    <meta property="og:description"
+          content="Papers Please citation generator."/>
+    <meta property="og:determiner" content="the"/>
+    <meta property="og:locale" content="en_GB"/>
+    <meta property="og:site_name" content="[saphi.re]"/>
+    <meta property="og:image" content="https://saphi.re/papers_please/example.png"/>
+    <title>Papers Please citation generator</title>
+    <link rel="stylesheet" href="main.css" type="text/css"
+        integrity="sha384-wZLpcgcpT7bYc6uAlWRAXNKaA8b0kr8utI1L+J55AB+QQLT8HfyAIkecmaty1B14" crossorigin="anonymous">
+    <script type="text/javascript" src="main.js"
+            integrity="sha384-Anxxw8Dd01TG3FctsEivPGtIjY+j2kOXnvKnM9Whon3PTr3YbN8f2rYgGI87RKQ9" crossorigin="anonymous">
+    </script>
+</head>
+
+<body>
+<div id="column">
+    <h1>"Papers Please" citation generator</h1>
+    <hr>
+    <div id="content">
+        <canvas id="main_canvas"></canvas>
+        <div id="controls">
+            <form id="form">
+                <label>
+                    Title text:
+                    <input name="title" title="title" type="text" value="M.O.A. Citation" autocomplete="off">
+                </label>
+                <label>
+                    Use alternative (old) font:
+                    <input name="altfont" title="altfont" type="checkbox">
+                </label>
+                <label>
+                    Citation text:
+                    <textarea name="text" title="text">Protocol violation.
+Cobrastan is not a real country</textarea>
+                </label>
+                <label>
+                    Penalty text:
+                    <input name="penalty" title="penalty" type="text" value="Warning issued - no penalty" autocomplete="off">
+                </label>
+                <label>
+                    Use condensed style:
+                    <input name="condensed" title="condensed" type="checkbox">
+                </label>
+                Colors
+                <label>
+                    Foreground: <input name="foreground" title="foreground" type="text" value="#5a5559" autocomplete="off">
+                </label>
+                <label>
+                    Background: <input name="background" title="background" type="text" value="#f3d7e6" autocomplete="off">
+                </label>
+                <label>
+                    Secondary: <input name="secondary" title="secondary" type="text" value="#bfa8a8" autocomplete="off">
+                </label>
+                <label>
+                    Barcode:
+                    <input name="barcode" title="barcode" type="text" value="1,1,1,2,2" autocomplete="off">
+                </label>
+                <input name="refresh" title="refresh" type="submit" value="Refresh">
+            </form>
+        </div>
+    </div>
+    <hr>
+    <span class="subscript">If the output is missing text, wait a bit and hit refresh as the font haven't loaded yet.</span>
+</div>
+</body>
+
+</html>
