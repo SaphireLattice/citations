@@ -9,6 +9,8 @@ Usage: `./citation.py "Protocol Violated.;Sleeping at work" "Penalty assessed - 
 
 Use `./citation.py --help` to get list of options.
 
+Live web version is [here](https://saphi.re/papers_please).
+
 ---
-All python code in the project is licensed under `GNU AGPL-3.0`.
+All python, typescript, html and css code in the project is licensed under `GNU AGPL-3.0`.
 
