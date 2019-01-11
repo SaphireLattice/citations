@@ -30,6 +30,8 @@ parser.add_argument('--background', '--bg', '-b', default=None,
                     help='hex color to use for background')
 parser.add_argument('--details', '--det', '-d', default=None,
                     help='hex color to use for background details')
+parser.add_argument('--output', default="citation.png",
+                    help='file to output into (always saves in PNG format)')
 
 args = parser.parse_args()
 
@@ -45,4 +47,4 @@ if __name__ == '__main__':
     factory = citations.Factory(lines, penalty=args.penalty, title=args.title,
                                 stamp_filename=args.stamp, use_alt_font=args.altfont,
                                 condensed=args.condensed, theme=theme, barcode=barcode)
-    factory.generate_file("citation.png")
+    factory.generate_file(args.output)
