@@ -336,7 +336,7 @@ class Factory:
             self.rect(draw, end - offset - 2, 3, 2, 3, color)
         else:
             end = 11
-            for x in reversed(spec):
+            for x in spec:
                 self.rect(draw, end + offset, 3, x, 6, color)
                 offset += 1 + x
             self.rect(draw, end + offset, 3, 2, 3, color)
