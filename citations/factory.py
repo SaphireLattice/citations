@@ -8,14 +8,21 @@ from typing import List, Tuple
 
 
 class Factory:
+    """
+        :param width: width of the image, works better if it's even
+        :param height: minimal height of the image
+        :param multiplier: image pixels size multiplier
+
+        .. warnings:: The built in stamp only work with multiplier == 2
+    """
     def __init__(self, lines, penalty, title: str,
                  barcode: List[int], theme,
                  condensed: bool = False, use_alt_font: bool = False,
                  main_font: str = defaults.main_font_file, alt_font: str = defaults.alt_font_file,
                  stamp_filename=defaults.stamp_filename, stamp_background=defaults.stamp_bg_filename,
                  width=defaults.width, height=defaults.height, multiplier: int = defaults.multiplier):
-        self.width = width  # Width should preferably be not even
-        self.height = height  # Actually it's MINIMAL height
+        self.width = width
+        self.height = height
         self.multiplier = multiplier
 
         if theme is None:
@@ -35,7 +42,6 @@ class Factory:
 
         # Ideally, there should be a stack of stamp images/bitmaps that you can
         # just layer over one another.
-        # WARNING: The built in stamps only work with multiplier == 2
         self.stamp_img_bg = Image.open(stamp_background)
         self.stamp_img = Image.open(stamp_filename)
 
@@ -119,13 +125,13 @@ class Factory:
         self._generate_(draw)
         return img
 
-    """Internal method to draw on already generated image.
-    
-    Draws on supplied PIL.ImageDraw canvas. No promises if
-    you use it on your own, the text might not fit. Use
-    generate_file or generate_image instead.
-    """
     def _generate_(self, draw: ImageDraw):
+        """Internal method to draw on already generated image.
+
+        Draws on supplied PIL.ImageDraw canvas. No promises if
+        you use it on your own, the text might not fit. Use
+        generate_file or generate_image instead.
+        """
         self.stamp(draw, self.stamp_img_bg)
         self.stamp(draw, self.stamp_img, self.color_bg)
         self.dots_row(draw, 0, (0, 0))
@@ -334,4 +340,3 @@ class Factory:
                 self.rect(draw, end + offset, 3, x, 6, color)
                 offset += 1 + x
             self.rect(draw, end + offset, 3, 2, 3, color)
-
