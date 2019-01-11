@@ -6,15 +6,16 @@ import re
 main_font = "BMmini.ttf"
 altfont = "Megan_Serif.ttf"
 
-parser = argparse.ArgumentParser(description='Generates Papers Please citation cards.')
+parser = argparse.ArgumentParser(description='Generates Papers Please citation cards.',
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('lines', nargs=1,
                     help='lines of the citation, separated by ; or newline')
 parser.add_argument('penalty', nargs="?", default=citations.defaults.penalty,
                     help='penalty text')
 parser.add_argument('--title', '-t', default=citations.defaults.title,
-                    help='title of the citation (default "M.O.A. CITATION")')
+                    help='title of the citation')
 parser.add_argument('--stamp', '-s', default=citations.defaults.stamp_filename,
-                    help='name of stamp .png file (default: moa)')
+                    help='name of stamp .png file')
 parser.add_argument('--altfont', '-a', action="store_true",
                     help='use alternative (old) font for the title')
 parser.add_argument('--condensed', '-o', action="store_true",
