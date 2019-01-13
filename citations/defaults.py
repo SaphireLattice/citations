@@ -21,4 +21,4 @@ title: str = "M.O.A. Citation"
 barcode = [1, 1, 1, 2, 2]
 barcode_str: str = "1,1,1,2,2"
 
-theme = 'default'
+theme = 'pink'
