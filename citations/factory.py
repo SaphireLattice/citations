@@ -1,10 +1,9 @@
 from PIL import Image, ImageDraw, ImageFont
+from typing import List, Tuple
 import math
 import re
 
-from . import defaults
-
-from typing import List, Tuple
+from . import defaults, themes
 
 
 class Factory:
@@ -16,7 +15,7 @@ class Factory:
         .. warnings:: The built in stamp only work with multiplier == 2
     """
     def __init__(self, lines, penalty, title: str,
-                 barcode: List[int], theme,
+                 barcode: List[int], theme=themes.named[defaults.theme],
                  condensed: bool = False, use_alt_font: bool = False,
                  main_font: str = defaults.main_font_file, alt_font: str = defaults.alt_font_file,
                  stamp_filename=defaults.stamp_filename, stamp_background=defaults.stamp_bg_filename,
@@ -25,11 +24,7 @@ class Factory:
         self.height = height
         self.multiplier = multiplier
 
-        if theme is None:
-            theme = [None, None, None]
-        self.color_bg = theme[0]
-        self.color_fg = theme[1]
-        self.color_elem = theme[2]
+        self.theme = theme
 
         self.use_alt_font = use_alt_font
         self.condensed = condensed
@@ -77,10 +72,9 @@ class Factory:
         # A small shortcut for sanity if the user of library really knows what they are doing
         if _skip_:
             return
+
         if theme is not None:
-            self.color_bg = theme[0]
-            self.color_fg = theme[1]
-            self.color_elem = theme[2]
+            self.theme = theme
 
         self.use_alt_font = use_alt_font or self.use_alt_font
         self.condensed = condensed or self.use_alt_font
@@ -120,7 +114,7 @@ class Factory:
             self.lines = lines
         self._check_options(lines, *options)
         self.lines, self.height = self._process_lines(self.lines)
-        img = Image.new("RGB", (self.width * self.multiplier, self.height * self.multiplier), self.color_bg)
+        img = Image.new("RGB", (self.width * self.multiplier, self.height * self.multiplier), self.theme.background)
         draw = ImageDraw.Draw(img)
         self._generate(draw)
         return img
@@ -133,16 +127,16 @@ class Factory:
         generate_file or generate_image instead.
         """
         self._stamp(draw, self.stamp_img_bg)
-        self._stamp(draw, self.stamp_img, self.color_bg)
+        self._stamp(draw, self.stamp_img, self.theme.background)
         self._dots_row(draw, 0, (0, 0))
         self._roll(draw)
-        self._rect(draw, self.width - 1, 0, self.width, self.height, self.color_elem)
+        self._rect(draw, self.width - 1, 0, self.width, self.height, self.theme.details)
         self._dots_row(draw, self.height - 1, (1, 0))
 
         self._print_barcode(draw, self.barcode)
 
         # Header separator line
-        self._dots_row(draw, 17, (8, 10), self.color_fg)
+        self._dots_row(draw, 17, (8, 10), self.theme.foreground)
         self._text_line(draw, 0, self.title.upper())
 
         offset = 1
@@ -151,9 +145,9 @@ class Factory:
 
         # Footer separator line
         if self.condensed:
-            self._dots_row(draw, self.height - 22 - 1, (8, 10), self.color_fg)
+            self._dots_row(draw, self.height - 22 - 1, (8, 10), self.theme.foreground)
         else:
-            self._dots_row(draw, self.height - 26 - 1, (8, 10), self.color_fg)
+            self._dots_row(draw, self.height - 26 - 1, (8, 10), self.theme.foreground)
 
         self._footer(draw, self.penalty)
 
@@ -235,7 +229,7 @@ class Factory:
     def _dots_row(self, draw: ImageDraw, line: int, margin: Tuple[int, int], color: str = None):
         m = self.multiplier
         if color is None:
-            color = self.color_elem
+            color = self.theme.details
         start = margin[0]
         end = self.width - 1 - margin[1]
         num = 0
@@ -249,7 +243,7 @@ class Factory:
     def _rect(self, draw: ImageDraw, x: int, y: int, w: int, h: int, color: str = None):
         m = self.multiplier
         if color is None:
-            color = self.color_elem
+            color = self.theme.details
         draw.rectangle([x * m,
                         y * m,
                         (x + w) * m - 1,
@@ -275,7 +269,7 @@ class Factory:
     def _text_line(self, draw: ImageDraw, line_num: int, text: str, color: str = None):
         mult = self.multiplier
         if color is None:
-            color = self.color_fg
+            color = self.theme.foreground
         offset = 4
         if line_num != 0:
             offset = 22 + (line_num - 1) * self.line_height
@@ -303,14 +297,14 @@ class Factory:
 
     def _stamp(self, draw: ImageDraw, img: Image, color: str = None):  # 32x32 at 150x44
         if color is None:
-            color = self.color_elem
+            color = self.theme.details
         draw.bitmap(((self.width * self.multiplier - img.width) // 2 - 1, (self.height - 4 - 32) * self.multiplier),
                     img, color)
 
     def _footer(self, draw: ImageDraw, text: str, color: str = None):
         m = self.multiplier
         if color is None:
-            color = self.color_fg
+            color = self.theme.foreground
         text = text.upper()
         y = (self.height - 15) * m
         size = self.body_font.getsize(text)
@@ -323,7 +317,7 @@ class Factory:
         if spec is None:
             spec = self.barcode
         if color is None:
-            color = self.color_fg
+            color = self.theme.foreground
         end = self.width - 11
         width = 2
         for x in spec:

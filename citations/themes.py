@@ -1,13 +1,10 @@
+from collections import namedtuple
 
-# Colors are a list of BG, FG and
-#  secondary colors
+Theme = namedtuple('Theme', 'background foreground details')
 
-
-default = ["#f3d7e6", "#5a5559", "#bfa8a8"]
-
-gold = ["#292929", "#C5B067", "#171717"]
-
-gray = ["#cbe2f3", "#555758", "#a1afba"]
-
-blue = ["#B5D3FF", "#54575c", "#88ade7"]
-
+named = {
+    'default': Theme("#f3d7e6", "#5a5559", "#bfa8a8"),
+    'gold': Theme("#292929", "#C5B067", "#171717"),
+    'gray': Theme("#cbe2f3", "#555758", "#a1afba"),
+    'blue': Theme("#B5D3FF", "#54575c", "#88ade7")
+}
