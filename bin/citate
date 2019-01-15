@@ -35,6 +35,11 @@ parser.add_argument('--details', '--det', '-d', default=None,
                     help='hex color to use for background details')
 parser.add_argument('--output', default="citation.png",
                     help='file to output into (always saves in PNG format)')
+parser.add_argument('--width', default=defaults.width, type=int,
+                    help='the width of the canvas image, including the margins')
+parser.add_argument('--height', default=defaults.height, type=int,
+                    help='minimum height of image, fits 1 title line, 3 body and 1 for footer, '
+                         'gets adjusted to fit content automatically')
 
 args = parser.parse_args()
 
@@ -45,8 +50,12 @@ if __name__ == '__main__':
                          args.foreground or theme.foreground,
                          args.details or theme.details)
 
-    factory = Factory(theme=theme, stamp_filename=args.stamp, use_alt_font=args.altfont, condensed=args.condensed)
+    factory = Factory(theme=theme, stamp_filename=args.stamp, use_alt_font=args.altfont, condensed=args.condensed,
+                      width=args.width, min_height=args.height)
 
     lines = args.lines[0].split(";")  # Might have a few problems if the lines contain ;
+    penalty = args.penalty.split(";")
+    title = args.title.split(";")
     barcode = [int(width) for width in re.findall(r"[\w']+", args.barcode)]
-    factory.generate_file(args.output, content=lines, penalty=args.penalty, title=args.title, barcode=barcode)
+    factory.generate_file(args.output, content=lines, penalty=penalty, title=title, barcode=barcode)
+    print("Generated \""+args.output+"\"")

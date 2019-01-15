@@ -4,6 +4,7 @@ import math
 import re
 
 from . import defaults, themes
+from .enums import Align, Section
 
 
 class Factory:
@@ -14,6 +15,7 @@ class Factory:
 
         .. warnings:: The built in stamp only work with multiplier == 2
     """
+
     def __init__(self, theme=themes.named[defaults.theme], condensed: bool = False, use_alt_font: bool = False,
                  main_font: str = defaults.main_font_file, alt_font: str = defaults.alt_font_file,
                  stamp_filename=defaults.stamp_filename, stamp_background=defaults.stamp_bg_filename,
@@ -47,13 +49,13 @@ class Factory:
         else:
             self.title_font = self.body_font
 
-        self.title_align = 0
+        self.title_align = Align.LEFT
 
         # 0, 1 -> right, left
-        if self._align_line(0) == 0:
-            self.barcode_align = 0
-        elif self._align_line(0) == 2:
-            self.barcode_align = 1
+        if self._align_line(Section.TITLE) == Align.LEFT:
+            self.barcode_align = Align.RIGHT
+        elif self._align_line(Section.TITLE) == Align.RIGHT:
+            self.barcode_align = Align.LEFT
 
         # Those should be set manually
         # WARNING: might not work properly with text wrapping! Proceed with caution
@@ -66,47 +68,90 @@ class Factory:
         img = self.generate_image(**options)
         img.save(filename, filetype)
 
-    def generate_image(self, content: List[str], penalty: str, title: str, barcode: List[int] = ()):
-        lines, content_height = self._process_lines(content)
-        height = max(content_height, self.min_height)
+    def generate_image(self, content: List[str], penalty: List[str], title: List[str],
+                       barcode: List[int] = ()) -> Image:
+        """This method formats the lines in a proper way for
+        the actual drawing method to work with them. Also
+        makes sure things don't overflow."""
+
+        height: int = self.min_height
+
+        barcode_width = 2
+        for stripe in barcode:
+            barcode_width += stripe
+
+        title = [item.upper() for item in title]
+        if self.use_alt_font:
+            title = [item.replace(" ", "    ") for item in title]
+        title, title_height = self._process_lines(title, 1, margins={0: (11, 12 + barcode_width + 2)})
+        height += title_height
+
+        lines, content_height = self._process_lines(content, self.min_lines)
+        height += content_height
+
+        penalty = [item.upper() for item in penalty]
+        penalty, penalty_height = self._process_lines(penalty, 1)
+        height += penalty_height
+
         img = Image.new('RGB', (self.width * self.multiplier, height * self.multiplier), self.theme.background)
         draw = ImageDraw.Draw(img)
         self._generate(draw, height, lines, penalty, title, barcode)
         return img
 
-    def _generate(self, draw: ImageDraw, height: int, lines: List[str], penalty: str, title: str, barcode: List[int]):
+    def _generate(self, draw: ImageDraw, height: int, lines: List[str],
+                  penalty: List[str], title: List[str], barcode: List[int]) -> None:
         """Internal method to draw on already generated image.
 
         Draws on supplied PIL.ImageDraw canvas. No promises if
         you use it on your own, the text might not fit. Use
         generate_file or generate_image instead.
         """
-        self._stamp(draw, height, self.stamp_img_bg)
-        self._stamp(draw, height, self.stamp_img, self.theme.background)
+
+        stamp_y = (height - 4 - 32 - (len(penalty) - 1) * self.line_height)
+        self._stamp(draw, stamp_y, self.stamp_img_bg)
+        self._stamp(draw, stamp_y, self.stamp_img, self.theme.background)
         self._dots_row(draw, 0, (0, 0))
         self._roll(draw, height)
         self._rect(draw, self.width - 1, 0, self.width, height, self.theme.details)
         self._dots_row(draw, height - 1, (1, 0))
 
-        self._print_barcode(draw, barcode)
+        barcode_width = self._print_barcode(draw, barcode)
 
         # Header separator line
-        self._dots_row(draw, 17, (8, 10), self.theme.foreground)
-        self._text_line(draw, 0, title.upper())
+        title_separator_y = 17 + (len(title) - 1) * self.line_height
+        self._dots_row(draw, title_separator_y, (8, 10), self.theme.foreground)
+        title_offset = 4
+        title_margin = [11, 12]
+        if self.use_alt_font:
+            title_offset = 3
+        if (self.title_align == Align.CENTER
+                or self._align_line(Section.TITLE, 0) == self.barcode_align):
+            if self.barcode_align == Align.LEFT:
+                title_margin[0] += barcode_width + 2
+            elif self.barcode_align == Align.RIGHT:
+                title_margin[1] += barcode_width + 2
+        title_margin = (title_margin[0], title_margin[1])
+        self._text_lines(draw, height, title[:1], title_offset, self.title_font, margin=title_margin)
+        if len(title) > 1:
+            self._text_lines(draw, height, title[1:], title_offset + self.line_height, self.title_font)
 
-        offset = 1
-        for index, line in enumerate(lines):
-            self._text_line(draw, index + offset, line)
+        self._text_lines(draw, height, lines, title_separator_y + 5)
 
         # Footer separator line
         if self.condensed:
-            self._dots_row(draw, height - 22 - 1, (8, 10), self.theme.foreground)
+            footer_separator_y: int = height - 22 - 1 - (len(penalty) - 1) * self.line_height
         else:
-            self._dots_row(draw, height - 26 - 1, (8, 10), self.theme.foreground)
+            footer_separator_y: int = height - 26 - 1 - (len(penalty) - 1) * self.line_height
 
-        self._footer(draw, height, penalty)
+        self._dots_row(draw, footer_separator_y, (8, 10), self.theme.foreground)
 
-    def _process_lines(self, input_lines):
+        self._text_lines(draw, height, penalty, -15, align=Align.CENTER, margin=(12, 11))
+
+    def _process_lines(self, input_lines: List[str], min_lines: int,
+                       margin: Tuple[int, int] = None, margins = None) -> Tuple[List[str], int]:
+        """Splits supplied array of lines so that it will fit
+        into the image. Outputs height added up, if any.
+        """
         lines = []
         if self.split_at_newline:
             newlines = []
@@ -117,17 +162,24 @@ class Factory:
             lines.extend(input_lines)
 
         newlines = []
-        margin = (11, 12)
-        for x in lines:
-            out = self._trim_line_length(x, self.body_font, margin, self.wrap_by_char)
+        if margin is None:
+            margin = (11, 12)
+        for index, line in enumerate(lines):
+            line_margin = margin
+            if margins is not None and len(newlines) in margins:
+                line_margin = margins[len(newlines)]
+            out = self._trim_line_length(line, self.body_font, line_margin, self.wrap_by_char)
             newlines.append(out[0])
             while len(out[1]) != 0:
-                out = self._trim_line_length(out[1], self.body_font, margin, self.wrap_by_char)
+                line_margin = margin
+                if margins is not None and len(newlines) in margins:
+                    line_margin = margins[len(newlines)]
+                out = self._trim_line_length(out[1], self.body_font, line_margin, self.wrap_by_char)
                 newlines.append(out[0])
         lines = newlines
 
-        new_height = self.min_height + max(0, len(lines) - self.min_lines) * self.line_height
-        return lines, new_height
+        added_height = max(0, len(lines) - min_lines) * self.line_height
+        return lines, added_height
 
     def _trim_line_length(self, text: str, font: ImageFont, margins: Tuple[int, int], wrap_by_char: bool = False,
                           width: int = None):
@@ -216,57 +268,64 @@ class Factory:
                        3, 3)
 
     # Could be overriden/extended to provide per-line alignment
-    def _align_line(self, line_num):
-        if line_num == 0 and self.title_align is not None:
+    def _align_line(self, segment, line: int = 0):
+        if segment == Section.TITLE and self.title_align is not None:
             return self.title_align
+        if segment == Section.FOOTER:
+            return Align.CENTER
         return self.body_align
 
-    def _text_line(self, draw: ImageDraw, line_num: int, text: str, color: str = None):
+    def _text_lines(self, draw, height: int, text: List[str], offset: int,
+                    font: ImageFont = None, color: str = None, align: Align = Align.LEFT,
+                    margin: Tuple[int, int] = (11, 12)):
+        for index, line in enumerate(text):
+            self._text_line(draw, height, line, index, offset, font, color, align,
+                            max_lines=len(text), margin=margin)
+
+    def _text_line(self, draw: ImageDraw, height: int, text: str, line_num: int, offset: int,
+                   font: ImageFont = None, color: str = None, align: Align = Align.LEFT,
+                   max_lines: int = None, margin: Tuple[int, int] = (11, 12)):
         mult = self.multiplier
+        left_m = margin[0]
+        right_m = margin[1]
         if color is None:
             color = self.theme.foreground
-        offset = 4
-        if line_num != 0:
-            offset = 22 + (line_num - 1) * self.line_height
+        if font is None:
+            font = self.body_font
 
-        font = self.body_font
-        if line_num == 0 and self.use_alt_font:
-            text = text.replace(" ", "    ")
-            font = self.title_font
-            offset = 3
+        if line_num > max_lines:
+            raise ValueError("Line number is over the assigned maximum")
 
-        align = self._align_line(line_num)
-        if align == 0:
-            draw.text((11 * mult - 1, offset * mult), text,
-                      font=font, fill=color)
+        if offset > 0:
+            offset += line_num * self.line_height
         else:
-            size = self.body_font.getsize(text)
-            if align == 1:
-                x = (self.width - 11 + 12 - (size[0] // mult)) // 2
-                draw.text((x * mult - 1, offset * mult), text,
-                          font=font, fill=color)
+            if max_lines is None:
+                offset = height + offset - line_num * self.line_height
             else:
-                x = self.width - 12 - (size[0] // mult)
-                draw.text((x * mult - 1, offset * mult), text,
-                          font=font, fill=color)
+                offset = height + offset - (max_lines - line_num - 1) * self.line_height
 
-    def _stamp(self, draw: ImageDraw, height: int, img: Image, color: str = None):  # 32x32 at 150x44
+        size = self.body_font.getsize(text)
+        if align == Align.LEFT:
+            draw.text((left_m * mult - 1, offset * mult), text,
+                      font=font, fill=color)
+            return
+        elif align == Align.CENTER:
+            x = (self.width - left_m + right_m - (size[0] // mult)) // 2
+            draw.text((x * mult - 1, offset * mult), text,
+                      font=font, fill=color)
+            return
+        elif align == Align.RIGHT:
+            x = self.width - right_m - (size[0] // mult)
+            draw.text((x * mult - 1, offset * mult), text,
+                      font=font, fill=color)
+            return
+        raise ValueError("Invalid alignment mode")
+
+    def _stamp(self, draw: ImageDraw, position: int, img: Image, color: str = None):  # 32x32 at 150x44
         if color is None:
             color = self.theme.details
-        draw.bitmap(((self.width * self.multiplier - img.width) // 2 - 1, (height - 4 - 32) * self.multiplier),
+        draw.bitmap(((self.width * self.multiplier - img.width) // 2 - 1, position * self.multiplier),
                     img, color)
-
-    def _footer(self, draw: ImageDraw, height: int, text: str, color: str = None):
-        m = self.multiplier
-        if color is None:
-            color = self.theme.foreground
-        text = text.upper()
-        y = (height - 15) * m
-        size = self.body_font.getsize(text)
-
-        x = math.ceil((self.width - 6 - 10 - (size[0] - 1) // m) / 2) * m + 6 * m
-        draw.text((x - 1, y), text, font=self.body_font, fill=color)
-        return
 
     def _print_barcode(self, draw: ImageDraw, spec: List[int], color: str = None):
         if color is None:
@@ -276,14 +335,17 @@ class Factory:
         for x in spec:
             width += 1 + x
         offset = 0
-        if self.barcode_align == 0:
+        if self.barcode_align == Align.RIGHT:
             for x in reversed(spec):
                 self._rect(draw, end - offset - x, 3, x, 6, color)
                 offset += 1 + x
             self._rect(draw, end - offset - 2, 3, 2, 3, color)
-        else:
+        elif self.barcode_align == Align.LEFT:
             end = 11
             for x in spec:
                 self._rect(draw, end + offset, 3, x, 6, color)
                 offset += 1 + x
             self._rect(draw, end + offset, 3, 2, 3, color)
+        else:
+            raise AttributeError("Unsupported barcode alignment value")
+        return offset + 2
